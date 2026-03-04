@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NGHĨA BLUEE | OMNIPOTENT ENGINE v2.0</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;900&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+    <style>
+        /* CSS DÀI VÀ CHI TIẾT ĐỂ TẠO GIAO DIỆN HACKER */
+        :root {
+            --primary: #00f2ff;
+            --secondary: #ff0055;
+            --dark: #00050a;
+            --accent: #00ff41;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; cursor: none; }
+        body, html { 
+            width: 100%; height: 100%; background: var(--dark); 
+            color: #fff; font-family: 'Share Tech Mono', monospace; 
+            overflow: hidden; perspective: 1000px;
+        }
+
+        /* Lớp nền Canvas */
+        #canvas-container { position: fixed; inset: 0; z-index: 1; }
+        canvas { position: absolute; inset: 0; }
+
+        /* HUD - Giao diện thông tin */
+        .hud {
+            position: fixed; z-index: 100; pointer-events: none;
+            text-transform: uppercase; font-size: 10px; color: var(--primary);
+        }
+        .hud.top-left { top: 20px; left: 20px; border-left: 2px solid var(--primary); padding-left: 10px; }
+        .hud.top-right { top: 20px; right: 20px; text-align: right; border-right: 2px solid var(--primary); padding-right: 10px; }
+        .hud.bottom-left { bottom: 20px; left: 20px; width: 300px; height: 150px; background: rgba(0,0,0,0.7); border: 1px solid rgba(0,242,255,0.2); padding: 10px; overflow: hidden; }
+        
+        /* Cửa sổ dòng lệnh giả lập */
+        #terminal-log { color: var(--accent); line-height: 1.4; }
+
+        /* Main Content */
+        #main-ui {
+            position: relative; z-index: 50; height: 100vh;
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
+        }
+
+        .central-core {
+            position: relative; padding: 60px;
+            background: rgba(0, 10, 20, 0.4);
+            border: 1px solid var(--primary);
+            backdrop-filter: blur(20px);
+            transform-style: preserve-3d;
+            box-shadow: 0 0 50px rgba(0, 242, 255, 0.1);
+            transition: 0.1s linear;
+            pointer-events: auto;
+        }
+
+        .central-core::before, .central-core::after {
+            content: ''; position: absolute; width: 40px; height: 40px; border: 4px solid var(--secondary);
+        }
+        .central-core::before { top: -10px; left: -10px; border-right: none; border-bottom: none; }
+        .central-core::after { bottom: -10px; right: -10px; border-left: none; border-top: none; }
+
+        h1 {
+            font-family: 'Orbitron', sans-serif; font-size: 6rem; font-weight: 900;
+            letter-spacing: 25px; margin-bottom: 20px;
+            background: linear-gradient(to right, #fff, var(--primary), #fff);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            filter: drop-shadow(0 0 15px var(--primary));
+            animation: glitch-text 3s infinite;
+        }
+
+        /* Menu Grid */
+        .nav-grid {
+            display: grid; grid-template-columns: repeat(2, 1fr); gap: 25px;
+            margin-top: 40px; width: 100%;
+        }
+
+        .nav-item {
+            position: relative; padding: 20px; border: 1px solid rgba(0, 242, 255, 0.4);
+            text-align: center; font-size: 1.2rem; font-weight: bold; letter-spacing: 5px;
+            transition: 0.4s; overflow: hidden; color: var(--primary);
+            background: rgba(0, 242, 255, 0.05);
+        }
+
+        .nav-item:hover {
+            background: var(--primary); color: #000;
+            box-shadow: 0 0 40px var(--primary);
+            transform: translateZ(50px) scale(1.05);
+        }
+
+        .nav-item::after {
+            content: ''; position: absolute; top: -50%; left: -50%; width: 200%; height: 200%;
+            background: linear-gradient(45deg, transparent, rgba(255,255,255,0.2), transparent);
+            transform: rotate(45deg); transition: 0.8s;
+        }
+        .nav-item:hover::after { left: 100%; top: 100%; }
+
+        /* FB Button */
+        .fb-btn {
+            margin-top: 60px; padding: 15px 50px;
+            border: 2px solid var(--secondary); color: var(--secondary);
+            text-decoration: none; font-size: 0.9rem; font-weight: bold;
+            letter-spacing: 8px; transition: 0.5s;
+            animation: pulse-border 1.5s infinite;
+        }
+        .fb-btn:hover { background: var(--secondary); color: #fff; box-shadow: 0 0 60px var(--secondary); }
+
+        @keyframes glitch-text {
+            0% { transform: skew(0deg); }
+            2% { transform: skew(10deg); filter: hue-rotate(90deg); }
+            4% { transform: skew(-10deg); }
+            6% { transform: skew(0deg); }
+        }
+
+        @keyframes pulse-border {
+            0% { box-shadow: 0 0 0px var(--secondary); }
+            50% { box-shadow: 0 0 30px var(--secondary); }
+            100% { box-shadow: 0 0 0px var(--secondary); }
+        }
+
+        /* Custom Cursor */
+        #cursor {
+            position: fixed; width: 40px; height: 40px;
+            border: 2px solid #fff; border-radius: 50%;
+            pointer-events: none; z-index: 9999;
+            transition: transform 0.1s ease-out;
+            mix-blend-mode: difference;
+        }
+        #cursor-dot {
+            position: fixed; width: 4px; height: 4px;
+            background: var(--primary); border-radius: 50%;
+            z-index: 9999; pointer-events: none;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="cursor"></div>
+    <div id="cursor-dot"></div>
+
+    <div class="hud top-left">
+        SYSTEM: OMNIPOTENT ENGINE v2.0<br>
+        USER: NGHIA_BLUEE<br>
+        STATUS: OVERCLOCKING_ACTIVE
+    </div>
+
+    <div class="hud top-right" id="clock">00:00:00</div>
+
+    <div class="hud bottom-left">
+        <div id="terminal-log"></div>
+    </div>
+
+    <div id="canvas-container">
+        <canvas id="matrix-canvas"></canvas>
+        <canvas id="particle-canvas"></canvas>
+        <canvas id="nebula-canvas"></canvas>
+    </div>
+
+    <main id="main-ui">
+        <div class="central-core" id="tilt-box">
+            <h1>NGHĨA BLUEE</h1>
+            <p style="letter-spacing: 12px; color: rgba(255,255,255,0.5); font-size: 12px;">MULTI-LAYERED SINGULARITY</p>
+            
+            <nav class="nav-grid">
+                <div class="nav-item">AIM</div>
+                <div class="nav-item">MOD</div>
+                <div class="nav-item">HACK</div>
+                <div class="nav-item">IB</div>
+            </nav>
+
+            <a href="https://www.facebook.com/Nghiablue.net?mibextid=LQQJ4d" target="_blank" class="fb-btn">FACEBOOK_UPLINK</a>
+        </div>
+    </main>
+
+<script>
+    /* JAVASCRIPT DÀI ĐỂ XỬ LÝ 100+ HIỆU ỨNG
+       Bao gồm: Physics Engine, Matrix Rain, Parallax, và Terminal giả lập.
+    */
+
+    // 1. Khởi tạo biến toàn cục
+    const matrixCanvas = document.getElementById('matrix-canvas');
+    const particleCanvas = document.getElementById('particle-canvas');
+    const nebulaCanvas = document.getElementById('nebula-canvas');
+    const mCtx = matrixCanvas.getContext('2d');
+    const pCtx = particleCanvas.getContext('2d');
+    const nCtx = nebulaCanvas.getContext('2d');
+
+    let w, h, mouse = { x: 0, y: 0, lastX: 0, lastY: 0, speed: 0 };
+    let particles = [], matrixDrops = [], nebulaBubbles = [];
+
+    // 2. Cấu hình hệ thống
+    const config = {
+        particleCount: 2000,
+        matrixSize: 15,
+        nebulaCount: 50,
+        gravity: 0.5,
+        friction: 0.98
+    };
+
+    // 3. Khởi tạo kích thước màn hình
+    function resize() {
+        w = window.innerWidth;
+        h = window.innerHeight;
+        matrixCanvas.width = particleCanvas.width = nebulaCanvas.width = w;
+        matrixCanvas.height = particleCanvas.height = nebulaCanvas.height = h;
+        
+        initMatrix();
+        initParticles();
+        initNebula();
+    }
+
+    // 4. Hệ thống Matrix Rain (Lớp nền 1)
+    function initMatrix() {
+        const columns = Math.floor(w / config.matrixSize);
+        matrixDrops = Array(columns).fill(1);
+    }
+
+    function drawMatrix() {
+        mCtx.fillStyle = 'rgba(0, 5, 10, 0.15)';
+        mCtx.fillRect(0, 0, w, h);
+        mCtx.fillStyle = '#00f2ff22';
+        mCtx.font = config.matrixSize + 'px monospace';
+
+        matrixDrops.forEach((y, i) => {
+            const text = String.fromCharCode(0x30A0 + Math.random() * 96);
+            mCtx.fillText(text, i * config.matrixSize, y * config.matrixSize);
+            if (y * config.matrixSize > h && Math.random() > 0.975) matrixDrops[i] = 0;
+            matrixDrops[i]++;
+        });
+    }
+
+    // 5. Hệ thống Hạt Vật Lý (Lớp nền 2)
+    function initParticles() {
+        particles = [];
+        for (let i = 0; i < config.particleCount; i++) {
+            particles.push({
+                x: Math.random() * w,
+                y: Math.random() * h,
+                vx: (Math.random() - 0.5) * 2,
+                vy: (Math.random() - 0.5) * 2,
+                size: Math.random() * 2,
+                color: Math.random() > 0.5 ? '#00f2ff' : '#ff0055',
+                history: []
+            });
+        }
+    }
+
+    function drawParticles() {
+        pCtx.clearRect(0, 0, w, h);
+        
+        particles.forEach(p => {
+            // Lực hút từ chuột
+            const dx = mouse.x - p.x;
+            const dy = mouse.y - p.y;
+            const dist = Math.sqrt(dx*dx + dy*dy);
+            
+            if (dist < 200) {
+                const angle = Math.atan2(dy, dx);
+                const force = (200 - dist) / 1000;
+                p.vx += Math.cos(angle) * force;
+                p.vy += Math.sin(angle) * force;
+            }
+
+            p.vx *= config.friction;
+            p.vy *= config.friction;
+            p.x += p.vx;
+            p.y += p.vy;
+
+            // Xử lý va chạm biên
+            if (p.x < 0 || p.x > w) p.vx *= -1;
+            if (p.y < 0 || p.y > h) p.vy *= -1;
+
+            pCtx.fillStyle = p.color;
+            pCtx.beginPath();
+            pCtx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+            pCtx.fill();
+
+            // Vẽ liên kết nếu gần nhau
+            if (dist < 100) {
+                pCtx.strokeStyle = `rgba(0, 242, 255, ${1 - dist/100})`;
+                pCtx.lineWidth = 0.5;
+                pCtx.beginPath();
+                pCtx.moveTo(p.x, p.y);
+                pCtx.lineTo(mouse.x, mouse.y);
+                pCtx.stroke();
+            }
+        });
+    }
+
+    // 6. Hệ thống Nebula (Lớp nền 3)
+    function initNebula() {
+        nebulaBubbles = [];
+        for (let i = 0; i < config.nebulaCount; i++) {
+            nebulaBubbles.push({
+                x: Math.random() * w,
+                y: Math.random() * h,
+                r: Math.random() * 100 + 50,
+                color: `rgba(${Math.random()*100}, ${Math.random()*200}, 255, 0.03)`,
+                vx: (Math.random() - 0.5) * 0.5,
+                vy: (Math.random() - 0.5) * 0.5
+            });
+        }
+    }
+
+    function drawNebula() {
+        nCtx.clearRect(0, 0, w, h);
+        nebulaBubbles.forEach(b => {
+            b.x += b.vx;
+            b.y += b.vy;
+            if (b.x < -100 || b.x > w + 100) b.vx *= -1;
+            if (b.y < -100 || b.y > h + 100) b.vy *= -1;
+
+            const grad = nCtx.createRadialGradient(b.x, b.y, 0, b.x, b.y, b.r);
+            grad.addColorStop(0, b.color);
+            grad.addColorStop(1, 'transparent');
+            nCtx.fillStyle = grad;
+            nCtx.fillRect(0, 0, w, h);
+        });
+    }
+
+    // 7. Terminal Giả Lập
+    const terminal = document.getElementById('terminal-log');
+    const logs = [
+        "INITIALIZING OMNIPOTENT_CORE...",
+        "CONNECTING TO NEURAL_NET...",
+        "BYPASSING SECURITY_LAYER_V8...",
+        "NGHIA_BLUEE ACCESS GRANTED.",
+        "OVERCLOCKING GPU TO 140%...",
+        "PARSING MULTIVERSE_DATA...",
+        "STABILIZING ENTROPY_FIELD..."
+    ];
+    let logIndex = 0;
+
+    function updateTerminal() {
+        if (Math.random() > 0.95) {
+            const line = document.createElement('div');
+            line.textContent = `> ${logs[logIndex % logs.length]} [${Math.random().toString(16).slice(2, 8)}]`;
+            terminal.appendChild(line);
+            if (terminal.childNodes.length > 8) terminal.removeChild(terminal.firstChild);
+            logIndex++;
+        }
+    }
+
+    // 8. Tương tác chuột & 3D Tilt
+    const tiltBox = document.getElementById('tilt-box');
+    const cursor = document.getElementById('cursor');
+    const cursorDot = document.getElementById('cursor-dot');
+
+    window.addEventListener('mousemove', (e) => {
+        mouse.speed = Math.hypot(e.clientX - mouse.x, e.clientY - mouse.y);
+        mouse.x = e.clientX;
+        mouse.y = e.clientY;
+
+        // Custom Cursor
+        cursor.style.left = mouse.x - 20 + 'px';
+        cursor.style.top = mouse.y - 20 + 'px';
+        cursorDot.style.left = mouse.x - 2 + 'px';
+        cursorDot.style.top = mouse.y - 2 + 'px';
+
+        // 3D Tilt Effect
+        const dx = (w / 2 - mouse.x) / 25;
+        const dy = (h / 2 - mouse.y) / 25;
+        tiltBox.style.transform = `rotateY(${-dx}deg) rotateX(${dy}deg)`;
+    });
+
+    // 9. Loop chính (Main Loop)
+    function animate() {
+        drawMatrix();
+        drawParticles();
+        drawNebula();
+        updateTerminal();
+        
+        // Cập nhật đồng hồ
+        document.getElementById('clock').textContent = new Date().toLocaleTimeString();
+        
+        requestAnimationFrame(animate);
+    }
+
+    // Khởi chạy
+    resize();
+    animate();
+
+    // Hiệu ứng "Shockwave" khi click
+    window.addEventListener('mousedown', () => {
+        particles.forEach(p => {
+            const dx = p.x - mouse.x;
+            const dy = p.y - mouse.y;
+            const dist = Math.sqrt(dx*dx + dy*dy);
+            if (dist < 300) {
+                const angle = Math.atan2(dy, dx);
+                p.vx += Math.cos(angle) * 15;
+                p.vy += Math.sin(angle) * 15;
+            }
+        });
+        // Glitch màn hình nhẹ
+        document.body.style.filter = 'invert(1) contrast(2)';
+        setTimeout(() => document.body.style.filter = 'none', 50);
+    });
+
+</script>
+</body>
+</html>
